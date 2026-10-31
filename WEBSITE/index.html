@@ -504,15 +504,22 @@ footer .mono { font-family: var(--mono); user-select: all; overflow-wrap: anywhe
   var PDF_REL = "/breaking%20barriers%20at%20the%20bar%2C%20the%20women%20who%20paved%20the%20way%20by%20donjeta%20feka.pdf";
 var SIMRAH_PDF = "Should%20Abortion%20Be%20Permitted%20Women%20Legal%20Insights%20Essay.pdf";
 var SIMRAH_PAGE = "article-should-abortion-be-permitted";
-  var isSimrah = (location.hash === "#article-should-abortion-be-permitted");
-var PDF_ABS = new URL(
-  isSimrah ? SIMRAH_PDF : PDF_REL,
-  "https://womeninlawcity.co.uk"
-).href;
-  var PAGE = isSimrah ? SIMRAH_PAGE : "article-breaking-barriers";
-  var PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
-  var WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
-var host = document.getElementById(isSimrah ? "pdf-reader-simrah" : "pdf-reader");
+var PDF_ABS = "https://womeninlawcity.co.uk";
+var PAGE = "article-breaking-barriers";
+var PDFJS = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js";
+var WORKER = "https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js";
+
+function getArticle() {
+  var isSimrah = location.hash === "#article-should-abortion-be-permitted";
+  return {
+    page: isSimrah ? SIMRAH_PAGE : PAGE,
+    url: new URL(isSimrah ? SIMRAH_PDF : PDF_REL, PDF_ABS).href,
+    host: document.getElementById(isSimrah ? "pdf-reader-simrah" : "pdf-reader")
+  };
+}
+  
+var article = getArticle();
+var host = article.host;
   if (!host) return;
   var started = false, doc = null, token = 0, lastWidth = 0, timer = null;
 
@@ -574,23 +581,55 @@ var host = document.getElementById(isSimrah ? "pdf-reader-simrah" : "pdf-reader"
   }
 
   // Only load the PDF library when the article page is actually opened.
-  function start() {
-    if (started) return;
-    started = true;
-    var sc = document.createElement("script");
-    sc.src = PDFJS;
-    sc.onload = function () {
-      if (!window.pdfjsLib) { fallback(); return; }
-      window.pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER;
-    open([PDF_ABS]);
-    };
-    sc.onerror = fallback;
-    document.head.appendChild(sc);
+  
+function start() {
+  article = getArticle();
+  host = article.host;
+  if (!host) return;
+
+  if (started) {
+    doc = null;
+    token++;
+    host.innerHTML = "";
+    open([article.url]);
+    return;
   }
 
-  function check() {
+  started = true;
+  var sc = document.createElement("script");
+  sc.src = PDFJS;
+  sc.onload = function () {
+    if (!window.pdfjsLib) {
+      fallback();
+      return;
+    }
+    window.pdfjsLib.GlobalWorkerOptions.workerSrc = WORKER;
+    open([article.url]);
+  };
+  sc.onerror = fallback;
+  document.head.appendChild(sc);
+}
+
+
+ 
+function check() {
   var currentPage = (location.hash || "").replace("#", "");
-  if (currentPage === PAGE) start();
+
+  if (currentPage === PAGE || currentPage === SIMRAH_PAGE) {
+    if (!started || article.page !== currentPage) {
+      article = getArticle();
+      host = article.host;
+
+      if (!started) {
+        start();
+      } else {
+        doc = null;
+        token++;
+        host.innerHTML = "";
+        open([article.url]);
+      }
+    }
+  }
 }
   window.addEventListener("hashchange", check);
   window.addEventListener("resize", function () {
