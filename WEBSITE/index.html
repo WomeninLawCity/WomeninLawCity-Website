@@ -446,6 +446,9 @@ footer .mono { font-family: var(--mono); user-select: all; overflow-wrap: anywhe
       var tagName = e.type === "Talk" ? "Panel" : e.type;
      var termStart = new Date(2026, 9, 5);
 var week = Math.floor((dt - termStart) / (7 * 24 * 60 * 60 * 1000)) + 1;
+if (dt >= new Date(2026, 10, 16)) {
+  week -= 1;
+}
 var parts = [days[dt.getDay()] + ', week ' + week];
       if (e.time) parts.push(e.time); else parts.push("Time to be confirmed");
       if (e.where) parts.push(e.where); else parts.push("Location to be confirmed");
