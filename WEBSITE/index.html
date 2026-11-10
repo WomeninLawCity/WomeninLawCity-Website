@@ -432,9 +432,9 @@ footer .mono { font-family: var(--mono); user-select: all; overflow-wrap: anywhe
     list.innerHTML = "";
     var shown = events.filter(function (e) { return filter === "all" || e.type === filter; });
     var byDate = function (a, b) { return a.d < b.d ? -1 : a.d > b.d ? 1 : 0; };
-    var upcoming = shown.filter(function (e) { return parse(e.d) >= today; }).sort(byDate);
-    var past = shown.filter(function (e) { return parse(e.d) < today; }).sort(byDate);
-    shown = upcoming.concat(past);
+    shown.sort(function (a, b) {
+  return parse(b.d) - parse(a.d);
+});
     if (!shown.length) {
       var li = document.createElement("li"); li.className = "empty";
       li.textContent = "No events of this type yet."; list.appendChild(li); return;
